@@ -1,31 +1,20 @@
 from model import *
 import api
-import model
 import json
 from datetime import datetime
 
-def map_coin(data:dict, date:str):
-    dumped = json.dumps(data, indent=3)
-    date_obj = datetime.strptime(date, '%d-%m-%Y')
-    coin_d1 = {
-        'coin_id': data['symbol'],
-        'price_usd': data['market_data']['current_price']['usd'],
-        'date': date,
-        'json' : dumped
+def map_coin(coin, max_price, min_price):
+    dumped = json.dumps(coin.data, indent=3)
+    coin_to_persist = {
+        'name': coin.name,
+        'year': coin.date.year,
+        'month': coin.date.month,
+        'max_price' : max_price,
+        'min_price' : min_price
     }
-    coin_d2 = {
-        'coin_id': data['symbol'],
-        'year': date_obj.year,
-        'month': date_obj.month,
-        'max_price' : 1,
-        'min_price' : 2
-    }
-
-    coin = Coin(**coin_d1)
-    coindata = CoinData(**coin_d2)
+    coin = CoinDB(*coin_to_persist)
 
     session.add(coin)
-    session.add(coindata)
     session.commit()
     
     
