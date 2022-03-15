@@ -1,58 +1,62 @@
-from datetime import datetime
-import api, mapper, logger, parser
+from env import logger
+import datetime
+import api, parser
 import json, os, pandas as pd
-
 
 COINS_PATH = f'{os.getcwd()}/coins'
 args = parser.init_parser()
 
-class CoinSaver():
-    def __init__(self, coin:str, dates:list):
-        self.coin = coin
-        self.dates = dates
-        self.URI = '/coins/{coin_id}/history?date={date}'
-        self.coin_dir = f'{COINS_PATH}/{coin}'
+class Data:
+    def __init__(self, coin_name, date):
+        self.coin_name = coin_name
+        self.date = date
+        self.dic = {}
+        
 
-    def check_dir(self, path):
-        if not os.path.exists(path):
-            os.mkdir(path)
-    
-    def create_sub_dir(self, start_date, end_date):
-        dir_name = f'{self.coin_dir}/{start_date}_to_{end_date}/'
-        return dir_name
+    def download(self):
+        self.dic = api.get_data_by_date(self.coin_name, self.date)
+        
 
-    def save_data(self):
-        self.check_dir(self.coin_dir)
-        savepath = f'{self.coin_dir}'
-        dates = self.dates
-        dates_between = [dates[0]] if len(self.dates) > 1 else [datetime.now().strftime("%d-%m-%Y")]
-        if len(self.dates) > 1:
-            savepath = self.create_sub_dir(dates[0], dates[1])
-            dates_between = pd.date_range(start=self.dates[0], end=self.dates[1], freq='D').strftime("%d-%m-%Y").to_list()
-        self.check_dir(savepath)
-        for date in dates_between:
-            url = self.URI.format(coin_id=self.coin, date=date)
-            data = api.get_data(url)
-            self.persist_coin(data, date)
-            with open(f'{savepath}/{date}.json', 'w') as f:
-                f.write(json.dumps(data, indent=3))
+    def show(self):
+        dumped = json.dumps(self.data, indent=3)
+        print(dumped)
 
-    def persist_coin(self, data, date):
-        if (args.persist):
-            mapper.map_coin(data, date)
+
+class DataAnalizer():
+    def __init__(self, data, month, year):
+        self.data = data 
+        self.month = month
+        self.year = year
+
+    def find_max_and_min_price(self):
+        date = datetime.date(year=self.year, month=self.month, day=1)
+        prices = []
+        while(date.month == self.month):
+            self.data.date = date
+            self.data.download()
+            price = float(self.data.dic['market_data']['current_price']['usd'])
+            prices.append(price.__round__(2))
+            logger.data(f'{self.year} / {self.month}')
+            logger.data(f'day: {date.day} - price: {price}')
+            date += datetime.timedelta(days=1)
+
+        min_price = min(prices)
+        max_price = max(prices)
+        return min_price, max_price
+
+
 
 
 if __name__ == '__main__':
-    saver = ...
-    if args.date:
-        saver = CoinSaver(args.coin, [args.date])
-    else:
-        saver = CoinSaver(args.coin, [])
-    if args.startdate and args.enddate:
-        saver = CoinSaver(args.coin, [args.startdate, args.enddate])
+    date = args.date
+    coin = args.coin
+    start_date = args.startdate
+    end_date = args.enddate
 
-    saver.save_data()
-    
-    
+    data = Data(coin, date)
+    data.download()
+
+    data_analyzer = DataAnalizer(data, 2, 2021)
+    data_analyzer.find_max_and_min_price()
 
 
