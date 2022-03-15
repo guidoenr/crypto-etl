@@ -5,45 +5,51 @@ import json, os, pandas as pd
 
 COINS_PATH = f'{os.getcwd()}/coins'
 args = parser.init_parser()
+logger = logger.get_logger()
 
-class Data:
+class Coin:
     def __init__(self, coin_name, date):
         self.coin_name = coin_name
         self.date = date
-        self.dic = {}
+        self.data = {}
         
 
-    def download(self):
-        self.dic = api.get_data_by_date(self.coin_name, self.date)
+    def download_data(self):
+        try:
+            data = api.get_data_by_date(self.coin_name, self.date)
+            self.data = data
+        except:
+            logger.critical('maximum requests made')
         
-
+        
     def show(self):
         dumped = json.dumps(self.data, indent=3)
         print(dumped)
 
 
-class DataAnalizer():
-    def __init__(self, data, month, year):
-        self.data = data 
+class CoinAnalyzer():
+    def __init__(self, coin, month, year):
+        self.coin = coin 
         self.month = month
         self.year = year
 
     def find_max_and_min_price(self):
         date = datetime.date(year=self.year, month=self.month, day=1)
         prices = []
+        logger.error(f'{self.year} / {self.month}')
+
         while(date.month == self.month):
-            self.data.date = date
-            self.data.download()
-            price = float(self.data.dic['market_data']['current_price']['usd'])
-            prices.append(price.__round__(2))
-            logger.data(f'{self.year} / {self.month}')
-            logger.data(f'day: {date.day} - price: {price}')
+            self.coin.date = date
+            self.coin.download_data()
+            price = api.get_price(self.coin.data)
+            prices.append(price)
+            logger.info(f'{date}: | price: {price}')    
             date += datetime.timedelta(days=1)
 
         min_price = min(prices)
         max_price = max(prices)
+        logger.info(f'MAX_PRICE: {max_price} u$d , MIN_PRICE: {min_price} u$d')
         return min_price, max_price
-
 
 
 
@@ -53,10 +59,10 @@ if __name__ == '__main__':
     start_date = args.startdate
     end_date = args.enddate
 
-    data = Data(coin, date)
-    data.download()
+    coin = Coin(coin, date)
+    coin.download_data()
 
-    data_analyzer = DataAnalizer(data, 2, 2021)
-    data_analyzer.find_max_and_min_price()
+    coin_analyzer = CoinAnalyzer(coin, date.month, date.year)
+    coin_analyzer.find_max_and_min_price()
 
 

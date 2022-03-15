@@ -1,13 +1,37 @@
-from distutils.log import INFO, WARN
 import logging
 
-def api(msg):
-    logging.log(INFO, f'[api]: {msg}')
+class CustomFormatter(logging.Formatter):
 
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    green = "\x1b[32m"
+    format = "%(asctime)s: [%(levelname)s]: %(message)s (%(filename)s:%(lineno)d)"
 
-def data(msg):
-    logging.log(INFO, f'[data_analyzer]: {msg}')
+    FORMATS = {
+        logging.DEBUG: green + format + reset,
+        logging.INFO: grey + format + reset,
+        logging.WARNING: yellow + format + reset,
+        logging.ERROR: red + format + reset,
+        logging.CRITICAL: bold_red + format + reset
+    }
 
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
 
-def mapper(msg):
-    logging.log(WARN, f'[mapper]: {msg}')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+
+ch.setFormatter(CustomFormatter())
+
+logger.addHandler(ch)
+
+def get_logger():
+    return logger
