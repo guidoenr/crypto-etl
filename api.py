@@ -1,7 +1,9 @@
 import requests
 import json
+from env import logger
 from datetime import datetime
 
+logger = logger.get_logger()
 COINGECKO_API = 'https://api.coingecko.com/api/v3'
 
 def get_data_by_date(coin:str, date:datetime, *params):
@@ -10,7 +12,12 @@ def get_data_by_date(coin:str, date:datetime, *params):
     return requests.get(url, *params).json() # dict
 
 def get_price(data):
-    return float(data['market_data']['current_price']['usd']).__round__(3)
+    try: 
+        return float(data['market_data']['current_price']['usd']).__round__(3) if data['market_data'] else 0
+    except KeyError:
+        return 0
+    
+   
 
 def prettify_data(data:dict):
     pretty = json.dumps(data, indent=3)

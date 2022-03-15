@@ -36,14 +36,15 @@ class CoinAnalyzer():
     def find_max_and_min_price(self):
         date = datetime.date(year=self.year, month=self.month, day=1)
         prices = []
-        logger.error(f'{self.year} / {self.month}')
+        logger.warning(f'{self.coin.coin_name} in: {self.year}/{self.month}')
 
         while(date.month == self.month):
             self.coin.date = date
             self.coin.download_data()
             price = api.get_price(self.coin.data)
+            if price == 0:
+                logger.warning(f'No {coin.coin_name} data for {date}')
             prices.append(price)
-            logger.info(f'{date}: | price: {price}')    
             date += datetime.timedelta(days=1)
 
         min_price = min(prices)
