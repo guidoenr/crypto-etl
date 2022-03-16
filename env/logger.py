@@ -35,3 +35,9 @@ logger.addHandler(ch)
 
 def get_logger():
     return logger
+
+def best(msg, best):
+    if best:
+        print(f"\x1b[32m{msg}\x1b[0m")
+    else:
+        print(f"\x1b[31;20m{msg}\x1b[0m")

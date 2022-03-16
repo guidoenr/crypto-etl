@@ -1,11 +1,11 @@
-from env import logger
+from env import logger, parser
+from model import mapper
 import datetime
-import api, parser, mapper
-import json, os, pandas as pd
+import api, json, os, pandas as pd
 
 COINS_PATH = f'{os.getcwd()}/coins'
 args = parser.init_parser()
-logger = logger.get_logger()
+lg = logger.get_logger()
 
 class Coin:
     def __init__(self, name, date):
@@ -19,10 +19,10 @@ class Coin:
             data = api.get_data_by_date(self.name, self.date)
             self.data = data
         except:
-            logger.critical('maximum requests made')
+            lg.critical('maximum requests made')
         
         
-    def show(self):
+    def show_data(self):
         dumped = json.dumps(self.data, indent=3)
         print(dumped)
 
@@ -35,28 +35,39 @@ class CoinAnalyzer():
         self.max_price = 0
         self.min_price = 0
 
+    def show(self):
+        if args.analysis:
+            self.find_max_and_min_price()
+        else:
+            self.coin.show_data()
+
     def find_max_and_min_price(self):
         date = datetime.date(year=self.year, month=self.month, day=1)
         prices = []
-        logger.warning(f'{self.coin.name} in: {self.year}/{self.month}')
+        lg.warning(f'{self.coin.name} in: {self.year}/{self.month}')
 
+        ant = 0
         while(date.month == self.month):
             self.coin.date = date
             self.coin.download_data()
             price = api.get_price(self.coin.data)
+            bt = 0
+            if price > ant:
+                bt = 1
             if price == 0:
-                logger.error(f'No {coin.name} data for {date}')
+                lg.warning(f'No {coin.name} data for {date}')
                 break;
-            print(f'date:[{date}], price: U$D {price}')
+            logger.best(f'date:[{date}], price: U$D {price}', bt)
             prices.append(price)
+            ant = price
             date += datetime.timedelta(days=1)
 
-        min_price = min(prices)
-        max_price = max(prices)
-        self.min_price = min_price 
-        self.max_price = max_price
-        logger.info(f'MAX_PRICE: {max_price} u$d , MIN_PRICE: {min_price} u$d')
-        return min_price, max_price
+        self.min_price = min(prices)
+        self.max_price = max(prices)
+        if price != 0:
+            lg.info(f'MAX_PRICE: {self.max_price} u$d , MIN_PRICE: {self.min_price} u$d')
+        else:
+            lg.info(f'(for that period): MAX: {self.max_price}, MIN: {self.min_price}')
 
     def persist(self):
         if args.persist:
@@ -64,15 +75,13 @@ class CoinAnalyzer():
 
 
 if __name__ == '__main__':
-    date = args.date
-    coin = args.coin
-    start_date = args.startdate
-    end_date = args.enddate
+    coin = args.coin 
+    date = args.date 
 
     coin = Coin(coin, date)
     coin.download_data()
 
-    coin_analyzer = CoinAnalyzer(coin, date.month, date.year)
-    coin_analyzer.find_max_and_min_price()
+    analyzer = CoinAnalyzer(coin, date.month, date.year)
+    analyzer.show()
 
 

@@ -25,30 +25,17 @@ def init_parser():
         required=True,
     )
     parser.add_argument(
-        "-s", 
-        "--startdate", 
-        help="Startdate in format ISO8601 (e.g. yyyy-mm-dd)", 
-        type=valid_date,
-        required=False,
-    )
-    parser.add_argument(
-        "-e", 
-        "--enddate", 
-        help="Enddate in format ISO8601 (e.g. yyyy-mm-dd)", 
-        type=valid_date,
-        required=False,
-    )
-    parser.add_argument(
-        "-d", 
+        "-d",
         "--date",
-        type=valid_date, 
-        help="The date for the coin data", 
+        type=valid_date,
+        required=True, 
+        help="The date for the coin data in format yyyy-mm-dd", 
     )
     parser.add_argument(
-        "-persist",
-        "-p", 
-        help="persist the data",
-        action='store_const', const=1
+        "-an",
+        "--analysis",
+        help="Full analysis for the crypto in year and month",
+        action='store_const', const=2
     )
     args = parser.parse_args()
     return args

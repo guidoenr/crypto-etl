@@ -1,4 +1,4 @@
-from model import *
+from model.model import *
 import api
 import json
 from datetime import datetime
