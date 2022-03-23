@@ -34,3 +34,4 @@ def ping_api():
 
 if __name__ == '__main__':
     prettify_data(get_market_chart('bitcoin'))
+    
